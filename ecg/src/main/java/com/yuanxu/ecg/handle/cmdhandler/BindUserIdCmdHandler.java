@@ -10,10 +10,16 @@ import java.util.regex.Pattern;
 
 public class BindUserIdCmdHandler extends BaseCmdHandler<BindUserIdCmd> {
 
-    private Pattern responsePatter = Pattern.compile(BindUserIdCmd.CMD_PREFIX + "000000([0-9a-fA-F]{2})",Pattern.CASE_INSENSITIVE);
+    private Pattern responsePatter = Pattern.compile(BindUserIdCmd.CMD_PREFIX + "000000([0-9a-fA-F]{2})", Pattern.CASE_INSENSITIVE);
 
     public BindUserIdCmdHandler(BindUserIdCmd cmd) {
         super(cmd);
+    }
+
+    @Override
+    public void sendCmdToDevice() {
+        super.sendCmdToDevice();
+        L.d("发送绑定用户指令：" + cmd.getHexStringCmd());
     }
 
     @Override

@@ -18,6 +18,12 @@ public class StopTransferringCmdHandler extends BaseCmdHandler<StopTransferringC
     }
 
     @Override
+    public void sendCmdToDevice() {
+        super.sendCmdToDevice();
+        L.d("发送停止传输指令：" + cmd.getHexStringCmd());
+    }
+
+    @Override
     protected boolean handleCmdResponse(String hexResponse) {
         L.d(getClass().getSimpleName() + "处理====" + hexResponse);
         Matcher matcher = responsePatter.matcher(hexResponse);

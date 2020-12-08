@@ -10,6 +10,12 @@ public class StartTransferringCmdHandler extends BaseCmdHandler<StartTransferrin
     }
 
     @Override
+    public void sendCmdToDevice() {
+        super.sendCmdToDevice();
+        L.d("发送开始传输指令：" + cmd.getHexStringCmd());
+    }
+
+    @Override
     protected boolean handleCmdResponse(String hexResponse) {
         L.d(getClass().getSimpleName() + "处理====" + hexResponse);
         //传输指令发送后并无指令回应信息，硬件会直接传输心电数据至本设备，

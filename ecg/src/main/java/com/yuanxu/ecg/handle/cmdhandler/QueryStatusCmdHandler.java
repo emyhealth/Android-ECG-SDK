@@ -26,6 +26,12 @@ public class QueryStatusCmdHandler extends BaseCmdHandler<QueryStatusCmd> {
     }
 
     @Override
+    public void sendCmdToDevice() {
+        super.sendCmdToDevice();
+        L.d("发送查询设备状态指令：" + cmd.getHexStringCmd());
+    }
+
+    @Override
     protected boolean handleCmdResponse(String hexResponse) {
         L.d(getClass().getSimpleName() + "处理====" + hexResponse);
         Matcher matcher = responsePatter.matcher(hexResponse);

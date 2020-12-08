@@ -9,10 +9,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class StopCollectingCmdHandler extends BaseCmdHandler<StopCollectingCmd> {
-    private Pattern responsePatter = Pattern.compile(StopCollectingCmd.CMD_PREFIX + "000000([0-9a-fA-F]{2})",Pattern.CASE_INSENSITIVE);
+    private Pattern responsePatter = Pattern.compile(StopCollectingCmd.CMD_PREFIX + "000000([0-9a-fA-F]{2})", Pattern.CASE_INSENSITIVE);
 
     public StopCollectingCmdHandler(StopCollectingCmd cmd) {
         super(cmd);
+    }
+
+    @Override
+    public void sendCmdToDevice() {
+        super.sendCmdToDevice();
+        L.d("发送停止采集指令：" + cmd.getHexStringCmd());
     }
 
     @Override

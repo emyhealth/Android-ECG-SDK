@@ -16,6 +16,12 @@ public class SetDeviceTimeCmdHandler extends BaseCmdHandler<SetDeviceTimeCmd> {
     }
 
     @Override
+    public void sendCmdToDevice() {
+        super.sendCmdToDevice();
+        L.d("发送设置设备时间指令：" + cmd.getHexStringCmd());
+    }
+
+    @Override
     protected boolean handleCmdResponse(String hexResponse) {
         L.d(getClass().getSimpleName() + "处理====" + hexResponse);
         Matcher matcher = responsePatter.matcher(hexResponse);

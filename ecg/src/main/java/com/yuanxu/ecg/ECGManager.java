@@ -29,7 +29,6 @@ import com.yuanxu.ecg.handle.cmdhandler.StopTransferringCmdHandler;
 import com.yuanxu.ecg.utils.ByteUtils;
 import com.yuanxu.ecg.utils.DeviceInfoParser;
 
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -114,8 +113,6 @@ public class ECGManager {
                 }
                 //任务成功结束，更新进度为空闲
                 updateProcess(ExecuteCallback.PROCESS_IDLE, "停止传输命令发送成功，数据传输终止，达到空闲状态");
-                //任务结束，清理所有callback
-                clearAllCallback();
             }
         }
 
@@ -386,10 +383,10 @@ public class ECGManager {
             public void onStart(boolean startConnectSuccess, String info, BleDevice device) {
                 L.d("开始连接=" + startConnectSuccess + "    info=" + info);
                 if (startConnectSuccess) {
-                    updateProcess(ExecuteCallback.PROCESS_CONNECT_START, info);
+                    updateProcess(ExecuteCallback.PROCESS_CONNECT_START, "连接开始，" + info);
                 } else {
                     if (executeCallback != null) {
-                        executeCallback.onFailure(ExecuteCallback.FAIL_CONNECTION_START_FAIL, info);
+                        executeCallback.onFailure(ExecuteCallback.FAIL_CONNECTION_START_FAIL, "连接无法正常开始，" + info);
                         clearAllCallback();
                     }
                 }
@@ -398,7 +395,7 @@ public class ECGManager {
             @Override
             public void onConnected(BleDevice device) {
                 L.d("已连接");
-                updateProcess(ExecuteCallback.PROCESS_CONNECTED, "The connection with the device(" + device.address + ") has been established");
+                updateProcess(ExecuteCallback.PROCESS_CONNECTED, "已连接至设备(" + device.address + ")");
                 setNotify(device, userInfo);
                 curConnectedDevice = device;
             }
@@ -406,17 +403,17 @@ public class ECGManager {
             @Override
             public void onDisconnected(String info, int status, BleDevice device) {
                 L.d("连接断开    info=" + info + "    status=" + status);
-                updateProcess(ExecuteCallback.PROCESS_DISCONNECTED, info);
                 curConnectedDevice = null;
-                if (disconnectByUser) {
+                int preProcess = currentProcess;
+                updateProcess(ExecuteCallback.PROCESS_DISCONNECTED, "连接断开，" + info);
+                //主动断开或空闲状态下断开后不再执行重连
+                if (disconnectByUser || preProcess == ExecuteCallback.PROCESS_IDLE) {
+                    L.i(disconnectByUser ? "已主动断开连接" : "设备空闲状态下连接断开，不再执行重连");
                     //清理callback
                     clearAllCallback();
                     return;
                 }
-                if (currentProcess == ExecuteCallback.PROCESS_IDLE) {//空闲状态下断开时不再执行重连
-                    //nothing to do
-                    L.i("设备空闲状态下连接断开");
-                } else if (autoReconnect) {//非空闲状态（如数据尚未接收完成等）且允许重连时
+                if (autoReconnect) {//非空闲状态（如数据尚未接收完成等）且允许重连时
                     //1.清空原接收到的数据（当前版本SDK暂无）
                     //2.重连重新执行检测任务
                     manager.connect(address, this);
@@ -424,7 +421,6 @@ public class ECGManager {
                     if (executeCallback != null) {
                         executeCallback.onFailure(BaseCallback.FAIL_OTHER, "任务执行过程中连接异常断开，且您不允许自动重连，本次检测任务失败");
                     }
-                    //任务结束，清理所有callback
                     clearAllCallback();
                 }
             }
@@ -445,7 +441,7 @@ public class ECGManager {
         distinguishVersion(device);
         Boolean b = versionMap.get(device.address);
         boolean oldVersion = b == null ? false : b;
-        updateProcess(ExecuteCallback.PROCESS_NOTIFY_START, "notify start");
+        updateProcess(ExecuteCallback.PROCESS_NOTIFY_START, "notify开始");
         manager.notify(device, SERVICE_UUID, oldVersion ? CHARACTERISTIC_UUID_V1 : CHARACTERISTIC_UUID_V2,
                 new BleNotifyCallback() {
                     @Override
@@ -459,7 +455,7 @@ public class ECGManager {
                     @Override
                     public void onNotifySuccess(String notifySuccessUuid, BleDevice device) {
                         L.d("notify成功  notifyUuid=" + notifySuccessUuid);
-                        updateProcess(ExecuteCallback.PROCESS_NOTIFY_SUCCESS, "notify success");
+                        updateProcess(ExecuteCallback.PROCESS_NOTIFY_SUCCESS, "notify成功");
                         executeCmd(userInfo);
                     }
 
@@ -493,9 +489,9 @@ public class ECGManager {
         if (collecting != null) {
             collecting.setTimestamp(timestamp);
         }
+        L.d("开始依命令执行流发送命令");
         //根据指令执行流开始发送命令
         flow.getHead().sendCmdToDevice();
-        L.d("开始依命令执行流发送命令");
         updateProcess(ExecuteCallback.PROCESS_CMD_SENDING, "命令发送中");
     }
 
@@ -528,7 +524,6 @@ public class ECGManager {
                 data, new BleWriteCallback() {
                     @Override
                     public void onWriteSuccess(byte[] data, BleDevice device) {
-                        L.d("写入成功：" + ByteUtils.bytes2HexStr(data));
                     }
 
                     @Override

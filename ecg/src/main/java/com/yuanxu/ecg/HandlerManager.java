@@ -24,7 +24,9 @@ import com.yuanxu.ecg.handle.cmdhandler.StopCollectingCmdHandler;
 import com.yuanxu.ecg.handle.cmdhandler.StopTransferringCmdHandler;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class HandlerManager {
     private BaseHandler handlerHead, handlerMiddle;
@@ -176,7 +178,7 @@ public class HandlerManager {
      */
     public static final class CmdExecuteFlow {
         private BaseCmdHandler head, current;
-        private List<String> typeList;
+        private Set<String> typeSet;
 
         private CmdExecuteFlow() {
             restrictType();
@@ -191,7 +193,7 @@ public class HandlerManager {
                 throw new IllegalArgumentException("BaseCmdHandler is null");
             }
             String className = cmdHandler.getClass().getSimpleName();
-            if (!typeList.contains(className)) {
+            if (!typeSet.contains(className)) {
                 throw new IllegalArgumentException("This " + className + " is not permitted here");
             }
             if (head == null) {
@@ -233,7 +235,7 @@ public class HandlerManager {
          * 查询该指令handler是否是被允许的类型
          */
         public boolean isPermitted(BaseCmdHandler cmdHandler) {
-            return typeList.contains(cmdHandler.getClass().getSimpleName());
+            return typeSet.contains(cmdHandler.getClass().getSimpleName());
         }
 
         /**
@@ -241,7 +243,7 @@ public class HandlerManager {
          */
         public List<String> getAllPermitCmdHandler() {
             List<String> list = new ArrayList<>();
-            list.addAll(typeList);
+            list.addAll(typeSet);
             return list;
         }
 
@@ -262,13 +264,10 @@ public class HandlerManager {
          */
         private <H extends BaseCmdHandler> void addPermitType(Class<H> tClass) {
             if (tClass == null) return;
-            if (typeList == null) {
-                typeList = new ArrayList<>();
+            if (typeSet == null) {
+                typeSet = new HashSet<>();
             }
-            String typeName = tClass.getSimpleName();
-            if (!typeList.contains(typeName)) {
-                typeList.add(typeName);
-            }
+            typeSet.add(tClass.getSimpleName());
         }
 
     }

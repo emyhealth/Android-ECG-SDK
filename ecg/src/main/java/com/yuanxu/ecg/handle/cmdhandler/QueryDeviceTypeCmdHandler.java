@@ -10,10 +10,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class QueryDeviceTypeCmdHandler extends BaseCmdHandler<QueryDeviceTypeCmd> {
-    private Pattern responsePatter = Pattern.compile(QueryDeviceTypeCmd.CMD_PREFIX + "(\\w{28})",Pattern.CASE_INSENSITIVE);
+    private Pattern responsePatter = Pattern.compile(QueryDeviceTypeCmd.CMD_PREFIX + "(\\w{28})", Pattern.CASE_INSENSITIVE);
 
     public QueryDeviceTypeCmdHandler(QueryDeviceTypeCmd cmd) {
         super(cmd);
+    }
+
+    @Override
+    public void sendCmdToDevice() {
+        super.sendCmdToDevice();
+        L.d("发送查询设备类型指令：" + cmd.getHexStringCmd());
     }
 
     @Override

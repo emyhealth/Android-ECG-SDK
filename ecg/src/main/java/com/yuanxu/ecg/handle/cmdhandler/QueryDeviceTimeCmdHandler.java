@@ -10,10 +10,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class QueryDeviceTimeCmdHandler extends BaseCmdHandler<QueryDeviceTimeCmd> {
-    private Pattern responsePatter = Pattern.compile(QueryDeviceTimeCmd.CMD_PREFIX + "(\\w{12})",Pattern.CASE_INSENSITIVE);
+    private Pattern responsePatter = Pattern.compile(QueryDeviceTimeCmd.CMD_PREFIX + "(\\w{12})", Pattern.CASE_INSENSITIVE);
 
     public QueryDeviceTimeCmdHandler(QueryDeviceTimeCmd cmd) {
         super(cmd);
+    }
+
+    @Override
+    public void sendCmdToDevice() {
+        super.sendCmdToDevice();
+        L.d("发送查询设备时间指令：" + cmd.getHexStringCmd());
     }
 
     @Override
