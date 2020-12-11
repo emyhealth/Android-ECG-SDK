@@ -6,33 +6,31 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
-import com.yuanxu.ecg.CmdFactory;
+import com.vmove.signalproc.SignalProc;
 import com.yuanxu.ecg.ECGManager;
-import com.yuanxu.ecg.HandlerManager;
-import com.yuanxu.ecg.bean.CmdType;
 import com.yuanxu.ecg.bean.UserInfo;
 import com.yuanxu.ecg.callback.BaseCallback;
-import com.yuanxu.ecg.callback.DeviceTimeCallback;
-import com.yuanxu.ecg.callback.DeviceTypeCallback;
 import com.yuanxu.ecg.callback.ExecuteCallback;
-import com.yuanxu.ecg.cmd.BaseCmd;
-import com.yuanxu.ecg.cmd.BindUserIdCmd;
-import com.yuanxu.ecg.cmd.QueryStatusCmd;
-import com.yuanxu.ecg.cmd.SetDeviceTimeCmd;
-import com.yuanxu.ecg.cmd.StartCollectingCmd;
-import com.yuanxu.ecg.cmd.StartTransferringCmd;
-import com.yuanxu.ecg.handle.cmdhandler.BindUserIdCmdHandler;
-import com.yuanxu.ecg.handle.cmdhandler.QueryStatusCmdHandler;
-import com.yuanxu.ecg.handle.cmdhandler.StartCollectingCmdHandler;
-import com.yuanxu.ecg.handle.cmdhandler.StartTransferringCmdHandler;
 import com.yuanxu.ecg.L;
+import com.yuanxu.electrocardiograph.view.EcgView;
+
+import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
 
+    int[] ecgData = new int[6];
+    private boolean isWaiting = false;
+    private byte[] bytes1 = new byte[20];
+    private int sub;
+    private EcgView ecgView;
+    private SignalProc proc;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        proc = new SignalProc();
+        proc.Init(100);
+        ecgView = findViewById(R.id.ecgView);
 
         ECGManager
                 .getInstance()
@@ -46,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
                 UserInfo userInfo = new UserInfo("欧阳修a", false, 20, 170, 65);
                 ECGManager
                         .getInstance()
-                        .execute("00:81:F9:62:50:65", userInfo, new ExecuteCallback() {
+                        .execute("00:81:F9:62:50:5A", userInfo, new ExecuteCallback() {
                             @Override
                             public void onSuccess() {//本轮检测任务成功
                                 L.e("onSuccess");
@@ -102,12 +100,13 @@ public class MainActivity extends AppCompatActivity {
                                     case PROCESS_IDLE://任务结束（成功或失败），达到空闲状态
                                         break;
                                 }
-                                L.e("onProcess---" + process + "     info=" + info);
+                                L.d("onProcess---" + process + "     info=" + info);
                             }
 
                             @Override
                             public void onReceivedOriginalData(byte[] data) {//原始心电数据
-                                L.e("onReceivedOriginalData");
+                                L.d("onReceivedOriginalData" + Arrays.toString(data));
+                                parseRealTimeData(data);
                             }
                         });
 
@@ -122,6 +121,61 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    /**
+     * 将采集到的实时数据 转换成 ecg Y轴的值
+     * 并写入ecgView队列中
+     * @param bytes
+     */
+    public void parseRealTimeData(byte[] bytes) {
+        try {
+            int i;
+            if (bytes.length == 18) {
+                for (i = 0; i < 18; i += 3) {
+                    ecgData[i / 3] = (bytes[i] & 255) << 16 | (bytes[i + 1] & 255) << 8 | bytes[i + 2] & 255;
+                }
+                //向ecg视图写入数据
+                //EcgView.addEcgData0(getV(ecgData));
+                ecgView.addEcgData0(getV(ecgData));
+            } else {
+                for (i = 0; i < bytes.length; ++i) {
+                    bytes1[i] = bytes[i];
+                }
+                sub = bytes.length;
+                isWaiting = true;
+            }
+            if (isWaiting) {
+                for (i = sub; i < 18; ++i) {
+                    bytes1[i] = bytes[i - sub];
+                }
+
+                for (i = 0; i < 18; i += 3) {
+                    ecgData[i / 3] = (bytes1[i] & 255) << 16 | (bytes1[i + 1] & 255) << 8 | bytes1[i + 2] & 255;
+                }
+                //向ecg视图写入数据
+                ecgView.addEcgData0(getV(ecgData));
+                isWaiting = false;
+            }
+
+        } catch (Exception var6) {
+            var6.printStackTrace();
+        }
+    }
+
+    /**
+     * 计算Y轴的值
+     * @param ecgData
+     * @return
+     */
+    private int[] getV(int[] ecgData){
+        int[] values = new int[ecgData.length];
+        for (int i=0;i<ecgData.length;i++){
+            int value= proc.Run(ecgData[i]);
+            Log.d(this.getClass().getName(), "原始值："+ecgData[i] + "；计算后的值："+value);
+            values[i] = value;
+        }
+        return values;
     }
 
     @Override

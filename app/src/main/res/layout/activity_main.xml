@@ -8,6 +8,12 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
+    <com.yuanxu.electrocardiograph.view.EcgView
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:id="@+id/ecgView">
+    </com.yuanxu.electrocardiograph.view.EcgView>
+
     <Button
         android:id="@+id/tv_test"
         android:layout_width="match_parent"
