@@ -10,7 +10,7 @@ allprojects {
 
 
 dependencies {
-    implementation 'xxx'
+    implementation 'implementation 'com.github.emyhealth:Android-ECG-SDK:1.0.1''
 }
 ```
 

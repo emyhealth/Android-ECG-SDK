@@ -168,7 +168,7 @@ public class ECGManager {
         return ECGManagerHolder.sManager;
     }
 
-    public static final class ECGManagerHolder {
+    private static final class ECGManagerHolder {
         static final ECGManager sManager = new ECGManager();
     }
 

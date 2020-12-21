@@ -28,7 +28,7 @@ public class MsgCenter {
 
     }
 
-    public static class MsgCenterHolder {
+    private static class MsgCenterHolder {
         static final MsgCenter sMsgCenter = new MsgCenter();
     }
 
